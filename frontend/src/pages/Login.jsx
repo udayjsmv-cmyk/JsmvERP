@@ -16,7 +16,7 @@ const Login = () => {
 
     try {
       // call backend login route
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await api.post("/login", { email, password });
       const { token, user } = res.data;
 
       if (!token || !user) {
