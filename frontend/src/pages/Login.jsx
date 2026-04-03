@@ -4,33 +4,57 @@ import api from "../api/axios";
 
 const Login = () => {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // ✅ prevent page reload
+
+    console.log("Submitting login..."); // 🔍 debug
+
     setError("");
     setLoading(true);
 
     try {
-      const res = await api.post("/auth/login", { email, password }); // calls backend
+      const res = await api.post("/auth/login", {
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
       const { token, user } = res.data;
 
+      // ✅ Save auth data
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // redirect based on role
+      // ✅ Redirect based on role
       switch (user.role) {
-        case "admin": navigate("/admin"); break;
-        case "manager": navigate("/manager"); break;
-        case "teamlead": navigate("/teamlead"); break;
-        case "employee": navigate("/employee"); break;
-        default: navigate("/"); break;
+        case "admin":
+          navigate("/admin");
+          break;
+        case "manager":
+          navigate("/manager");
+          break;
+        case "teamlead":
+          navigate("/teamlead");
+          break;
+        case "employee":
+          navigate("/employee");
+          break;
+        default:
+          navigate("/");
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || "Login failed";
+      console.error("Login error:", err);
+
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed";
+
       setError(msg);
     } finally {
       setLoading(false);
@@ -38,28 +62,42 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-100">
+    <div className="min-h-screen flex items-center justify-center bg-blue-100 px-4">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">CRM Login</h2>
-        {error && <p className="text-red-500 text-center mb-3">{error}</p>}
+        <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
+          CRM Login
+        </h2>
+
+        {error && (
+          <p className="text-red-500 text-center mb-3">{error}</p>
+        )}
+
+        {/* ✅ IMPORTANT: onSubmit */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
             className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
+
           <input
             type="password"
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
             className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
-          <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+
+          {/* ✅ IMPORTANT: type="submit" */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
