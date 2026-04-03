@@ -16,10 +16,9 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 const app = express();
 
 // ✅ CORS for dev + deployed frontend
-const cors = require('cors');
-
 const allowedOrigins = [
-  "https://jsmv-crm.vercel.app" // your Vercel frontend
+  "https://jsmv-crm.vercel.app", // production frontend
+  "http://localhost:3000"        // local dev frontend
 ];
 
 app.use(cors({
@@ -30,7 +29,7 @@ app.use(cors({
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true, // if using cookies/auth
+  credentials: true,
 }));
 
 // ✅ Logger and body parser
