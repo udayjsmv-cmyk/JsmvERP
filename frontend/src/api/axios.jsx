@@ -1,14 +1,11 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
-
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: import.meta.env.VITE_API_BASE_URL, // backend URL
   timeout: 20000,
-  withCredentials: true
+  withCredentials: true, // only if backend uses cookies
 });
 
-// Attach JWT token if exists
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
