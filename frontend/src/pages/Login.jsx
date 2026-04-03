@@ -63,7 +63,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
-          CRM Login
+          ERP Login
         </h2>
 
         {error && (
@@ -109,7 +109,7 @@ const Login = () => {
         </form>
 
         <p className="text-center text-gray-600 text-sm mt-4">
-          © {new Date().getFullYear()} CRM System
+          © {new Date().getFullYear()} ERP System by UK
         </p>
       </div>
     </div>
