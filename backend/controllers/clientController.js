@@ -128,30 +128,6 @@ exports.uploadLeads = async (req, res) => {
       return res.status(409).json({ message: "All leads already exist" });
     }
 
-const Client = require("../models/Client");
-
-// ✅ DELETE ALL BY DIVISION (ADMIN ONLY)
-exports.deleteAllByDivision = async (req, res) => {
-  const { division } = req.query;
-
-  if (!division) {
-    return res.status(400).json({ message: "Division is required" });
-  }
-
-  try {
-    const result = await Client.deleteMany({ division });
-
-    res.status(200).json({
-      message: "All data deleted successfully",
-      deletedCount: result.deletedCount,
-    });
-  } catch (error) {
-    console.error("Delete error:", error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-
     
     // ===== Get employees under this manager =====
     const employees = await User.find({
