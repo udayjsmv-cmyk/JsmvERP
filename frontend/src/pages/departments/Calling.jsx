@@ -8,7 +8,6 @@ const Calling = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [fetchLeads, setFetchLeads] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const role = getUserRole();
   const currentUser = getUser();
@@ -25,7 +24,6 @@ const Calling = () => {
     "Business",
   ];
 
-  // ✅ UPLOAD FUNCTION (Manager only)
   const handleUpload = async (e) => {
     e.preventDefault();
 
@@ -45,7 +43,7 @@ const Calling = () => {
       formData.append("division", selectedCategory);
 
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/clients/upload-leads`,
+        `${import.meta.env.VITE_API_BASE_URL}/clients/upload-leads`, // ✅ FIXED
         {
           method: "POST",
           headers: {
@@ -61,10 +59,12 @@ const Calling = () => {
         throw new Error(data.message || "Upload failed");
       }
 
-      toast.success(`Inserted: ${data.inserted}, Failed: ${data.failed}`);
+      toast.success(
+        `Inserted: ${data.inserted}, Failed: ${data.failed}`
+      );
 
       setFile(null);
-      setFetchLeads((prev) => !prev);
+      setFetchLeads(prev => !prev);
     } catch (err) {
       console.error(err);
       toast.error(err.message);
@@ -73,66 +73,22 @@ const Calling = () => {
     }
   };
 
-  // ✅ DELETE FUNCTION (Admin only)
-  const handleDeleteAll = async () => {
-    if (!selectedCategory) {
-      return toast.error("Select category first");
-    }
-
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete all data in ${selectedCategory}?`
-    );
-
-    if (!confirmDelete) return;
-
-    try {
-      setDeleting(true);
-
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/clients/delete-all?division=${selectedCategory}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Delete failed");
-      }
-
-      toast.success("All data deleted successfully");
-
-      setFetchLeads((prev) => !prev);
-    } catch (err) {
-      console.error(err);
-      toast.error(err.message);
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   return (
     <div className="p-6">
       <h2 className="text-xl font-semibold mb-4">Calling Department</h2>
 
-      {/* CATEGORY SELECT */}
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
         className="border p-2 mb-4"
       >
         <option value="">Select Category</option>
-        {categories.map((cat) => (
+        {categories.map(cat => (
           <option key={cat}>{cat}</option>
         ))}
       </select>
 
-      {/* ✅ UPLOAD - MANAGER ONLY */}
-      {role?.toLowerCase() === "manager" && (
+      {role === "manager" && (
         <form onSubmit={handleUpload} className="mb-4">
           <input
             type="file"
@@ -150,18 +106,6 @@ const Calling = () => {
         </form>
       )}
 
-      {/* ✅ DELETE - ADMIN ONLY */}
-      {role?.toLowerCase() === "admin" && (
-        <button
-          onClick={handleDeleteAll}
-          disabled={deleting}
-          className="px-4 py-2 bg-red-600 text-white rounded mb-4"
-        >
-          {deleting ? "Deleting..." : "Delete All Data"}
-        </button>
-      )}
-
-      {/* DATA VIEWER */}
       <ClientDataViewer
         role={role}
         currentUser={currentUser}
