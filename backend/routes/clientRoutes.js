@@ -17,8 +17,7 @@ const {
   getByStatus,
   addCallLog,
   getCallLogs,
-  updateLeadStatus,
-  deleteAllByDivision // ✅ ADDED
+  updateLeadStatus
 } = client;
 
 // ================= LEADS =================
@@ -26,13 +25,13 @@ const {
 // Get all leads
 router.get("/", requireAuth, allowRoles("admin", "manager", "teamlead"), getAllLeads);
 
-// Upload leads
+// ✅ FIXED Upload route
 router.post(
   "/upload-leads",
   requireAuth,
   allowRoles("manager"),
   upload.single("file"),
-  uploadToGridFS,
+  uploadToGridFS, // ✅ IMPORTANT FIX
   uploadLeads
 );
 
@@ -56,39 +55,39 @@ router.get("/:id/call-log", requireAuth, getCallLogs);
 // ================= FILTERS =================
 router.get("/division/:division", requireAuth, getByDivision);
 router.get("/status/:status", requireAuth, getByStatus);
-
-// ================= DASHBOARD =================
 router.get("/dashboard-stats", requireAuth, client.getDashboardStats);
 router.get("/employee-performance", requireAuth, client.getEmployeePerformance);
 router.get("/hourly-report", requireAuth, client.getHourlyReport);
 router.get("/pipeline-stats", requireAuth, client.getPipelineStats);
+router.get(
+  "/documents-details", requireAuth,allowRoles("manager", "admin"),client.getDocumentsDetailed
+);
+router.get(
+  "/preparation-details",
+  requireAuth,
+  allowRoles("manager", "admin"),
+  client.getPreparationDetails
+);
 
-// ================= DOCUMENTS =================
-router.get("/documents-details", requireAuth, allowRoles("manager", "admin"), client.getDocumentsDetailed);
-router.get("/preparation-details", requireAuth, allowRoles("manager", "admin"), client.getPreparationDetails);
-router.get("/payment-details", requireAuth, allowRoles("manager", "admin"), client.getPaymentDetails);
-
-router.get("/document/:fileId", requireAuth, allowRoles("admin","manager"), client.getDocumentPreview);
-
+router.get(
+  "/payment-details",
+  requireAuth,
+  allowRoles("manager", "admin"),
+  client.getPaymentDetails
+);
+router.get("/document/:fileId",requireAuth,allowRoles("admin","manager"),client.getDocumentPreview);
 router.delete(
   "/document/:id",
   requireAuth,
   allowRoles("admin", "manager"),
   client.deleteDocument
 );
-
-// ================= REPORTS =================
-router.get("/clients/performance", requireAuth, client.getPerformanceStats);
+router.get(
+  "/clients/performance",
+  requireAuth,
+  client.getPerformanceStats
+);
 router.get("/documents-grouped", requireAuth, allowRoles("manager","admin"), client.getDocumentsGrouped);
 router.get("/preparation-grouped", requireAuth, allowRoles("manager","admin"), client.getPreparationGrouped);
 router.get("/payments-grouped", requireAuth, allowRoles("manager","admin"), client.getPaymentsGrouped);
-
-// ================= ✅ DELETE ALL (ADMIN ONLY) =================
-router.delete(
-  "/delete-all",
-  requireAuth,
-  allowRoles("admin"),
-  deleteAllByDivision
-);
-
 module.exports = router;
