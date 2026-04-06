@@ -61,7 +61,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-blue-100 px-4">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
-          CRM Login
+          ERP Login
         </h2>
 
         {error && (
