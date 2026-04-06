@@ -10,16 +10,15 @@ import Calling from "../pages/departments/Calling";
 import Prepare from "../pages/departments/Prepare";
 import Account from "../pages/departments/Account";
 import Payment from "../pages/departments/Payment";
+import Reviewer from "../pages/departments/Reviewer";
+import ClientsPage from "../pages/ClientsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import { isLoggedIn, getUser } from "../utils/auth";
 import Login from "../pages/Login";
-import Reviewer from "../pages/departments/Reviewer";
-import ClientsPage from "../pages/ClientsPage";
 
 export const AppRoutes = () => {
-  // Get the logged-in user object
   const user = getUser();
-  const role = user?.role || ""; // e.g., "employee", "teamlead", etc.
+  const role = user?.role || "";
 
   return (
     <Router>
@@ -30,7 +29,7 @@ export const AppRoutes = () => {
           element={isLoggedIn() ? <Navigate to="/dashboard" replace /> : <Login />}
         />
 
-        {/* Protected Routes */}
+        {/* Protected Dashboard Routes */}
         <Route
           path="/"
           element={
@@ -39,17 +38,20 @@ export const AppRoutes = () => {
             </ProtectedRoute>
           }
         >
+          {/* Default route */}
           <Route index element={<Navigate to="dashboard" replace />} />
+
+          {/* Main pages */}
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
           <Route path="employees" element={<Employees />} />
-          <Route path="/clients" element={<ClientsPage />} />
+          <Route path="clients" element={<ClientsPage />} />
           <Route path="settings" element={<Settings />} />
 
-          {/* Pass role to Calling */}
+          {/* Department routes */}
           <Route path="departments/calling" element={<Calling role={role} />} />
           <Route path="departments/prepare" element={<Prepare />} />
-          <Route path="departments/reviewer" element={<Reviewer/>}/>
+          <Route path="departments/reviewer" element={<Reviewer />} />
           <Route path="departments/account" element={<Account />} />
           <Route path="departments/payment" element={<Payment />} />
         </Route>

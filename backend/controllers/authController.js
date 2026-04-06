@@ -147,7 +147,9 @@ exports.login = async (req, res) => {
     if (!email || !password) return res.status(400).json({ message: "Missing credentials" });
 
     const emailNorm = email.toString().toLowerCase().trim();
+    console.time("DB find user");
     const user = await User.findOne({ email: emailNorm });
+    console.timeEnd("DB find user");
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const ok = await bcrypt.compare(password, user.password);
