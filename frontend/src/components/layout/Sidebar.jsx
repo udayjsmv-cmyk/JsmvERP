@@ -114,8 +114,8 @@ const Sidebar = () => {
         {permissions.departments?.length === 1 ? (
           // ✅ Single department (Employee / Preparer / Reviewer)
           <Link
-            to={/departments/${permissions.departments[0]}}
-            className={linkClasses(/departments/${permissions.departments[0]})}
+            to={`/departments/${permissions.departments[0]}`}
+            className={`linkClasses(/departments/${permissions.departments[0]})`}
           >
             <i className="fa-solid fa-building mr-3 w-5"></i>
             {isOpen && formatLabel(permissions.departments[0])}
