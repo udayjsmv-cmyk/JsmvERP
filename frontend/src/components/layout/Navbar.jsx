@@ -1,36 +1,130 @@
-import React from "react";
-import { logout, getUserRole } from "../../utils/auth";
+import React, { useState, useContext } from "react";
+import { logout } from "../../utils/auth";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../../context/UserContext"; // ✅ ADD
 
 const Navbar = () => {
-  const role = getUserRole();
+  const navigate = useNavigate();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
+
+  const { user } = useContext(UserContext); // ✅ USE CONTEXT
+
+  const toggleTheme = () => {
+    if (darkMode) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    }
+    setDarkMode(!darkMode);
+  };
+
+  const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
 
   return (
-    <nav className="flex justify-between items-center p-4"
-      style={{ backgroundColor: "#006989", color: "#F1FAFA" }}
-    >
-      <div style={{ color: "#F1FAFA", fontWeight: "500" }}>
-        Welcome, {role}
+    <nav className="flex justify-between items-center px-6 py-3 
+      bg-gradient-to-r from-[#006989] to-[#00B4D8] 
+      dark:from-gray-900 dark:to-gray-800 
+      text-white shadow-md">
+
+      {/* Left */}
+      <div className="text-lg font-semibold tracking-wide">
+        Welcome,{" "}
+        <span className="font-bold">
+          {user?.FirstName} {user?.LastName}
+        </span>
       </div>
-     <button
-  onClick={logout}
-  className="px-4 py-2 rounded-lg text-white font-semibold shadow-md transition duration-300 transform hover:scale-105 hover:shadow-[0_0_15px_rgba(0,180,216,0.6)]"
-  style={{
-    background: "linear-gradient(135deg, #006989, #00B4D8, #7F00FF)", // Blue → Cyan → Purple
-    backgroundSize: "300% 300%",
-    animation: "gradientShift 6s ease infinite",
-  }}
->
-  Logout
-</button>
 
-<style>{`
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-`}</style>
+      {/* Right */}
+      <div className="relative flex items-center gap-3">
 
+        {/* Name + Role */}
+        <div className="hidden md:flex flex-col text-right leading-tight">
+          <span className="font-semibold text-sm">
+            {user?.FirstName} {user?.LastName}
+          </span>
+          <span className="text-xs opacity-80 capitalize">
+            {user?.role}
+          </span>
+        </div>
+
+        {/* Avatar */}
+        <div className="relative">
+          <img
+            src={
+              user?.profilePic?.fileUrl
+                ? `${baseUrl}${user.profilePic.fileUrl}`
+                : "https://i.pravatar.cc/40"
+            }
+            alt="profile"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="w-11 h-11 rounded-full cursor-pointer border-2 border-white object-cover shadow-md hover:scale-105 transition"
+          />
+
+          {/* Online dot */}
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></span>
+        </div>
+
+        {/* Dropdown */}
+        {menuOpen && (
+          <div className="absolute right-0 top-14 w-56 
+            backdrop-blur-md bg-white/90 dark:bg-gray-800/90
+            text-black dark:text-white 
+            rounded-xl shadow-2xl py-2 z-50 border border-gray-200 dark:border-gray-700">
+
+            {/* User Info */}
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <p className="font-semibold">
+                {user?.FirstName} {user?.LastName}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {user?.email}
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                navigate("/profile");
+                setMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              👤 Profile
+            </button>
+
+            <button
+              onClick={() => {
+                navigate("/settings");
+                setMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              ⚙️ Settings
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            </button>
+
+            <hr className="border-gray-200 dark:border-gray-700 my-1" />
+
+            <button
+              onClick={logout}
+              className="w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              🚪 Logout
+            </button>
+          </div>
+        )}
+      </div>
     </nav>
   );
 };
