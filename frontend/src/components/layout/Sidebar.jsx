@@ -87,13 +87,6 @@ const Sidebar = () => {
             {isOpen && "Dashboard"}
           </Link>
         )}
-
-        {/* Profile */}
-        <Link to="/profile" className={linkClasses("/profile")}>
-          <i className="fa-solid fa-user mr-3 w-5"></i>
-          {isOpen && "Profile"}
-        </Link>
-
         {/* Employees */}
         {permissions.employees && (
           <Link to="/employees" className={linkClasses("/employees")}>
@@ -163,12 +156,6 @@ const Sidebar = () => {
             )}
           </>
         ) : null}
-
-        {/* Settings */}
-        <Link to="/settings" className={linkClasses("/settings")}>
-          <i className="fa-solid fa-cog mr-3 w-5"></i>
-          {isOpen && "Settings"}
-        </Link>
       </nav>
     </div>
   );
