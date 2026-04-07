@@ -31,61 +31,53 @@ const upload = multer({
 });
 
 // Upload to GridFS middleware
-const uploadToGridFS = async (req, res, next) => {
-  if (!req.file) return next();
+const uploadToGridFS = async (file, user) => {
+  if (!file) return null;
 
-  try {
-    // Ensure MongoDB connection is ready
-    if (mongoose.connection.readyState !== 1) {
-      await new Promise((resolve, reject) => {
-        mongoose.connection.once("open", resolve);
-        mongoose.connection.once("error", reject);
-      });
-    }
-
-    const db = mongoose.connection.db;
-    const bucket = new GridFSBucket(db, {
-      bucketName: "clientDocuments",
-    });
-
-    const filename = `${Date.now()}-${req.file.originalname}`;
-    const readableStream = Readable.from(req.file.buffer);
-
-    const uploadStream = bucket.openUploadStream(filename, {
-      contentType: req.file.mimetype,
-      metadata: {
-        uploadedBy: req.user ? req.user._id : null,
-        originalname: req.file.originalname,
-      },
-    });
-
-    // Pipe buffer → GridFS
+  // Ensure DB connection
+  if (mongoose.connection.readyState !== 1) {
     await new Promise((resolve, reject) => {
-      readableStream
-        .pipe(uploadStream)
-        .on("error", (err) => {
-          console.error("GridFS upload error:", err);
-          reject(err);
-        })
-        .on("finish", () => resolve());
-    });
-
-    // Attach file info for controller
-    req.file.id = uploadStream.id;
-    req.file.filename = filename;
-    req.file.url = `/api/files/download/${uploadStream.id}`;
-
-    next();
-  } catch (err) {
-    console.error("GridFS middleware error:", err);
-    return res.status(500).json({
-      message: "Error uploading file",
-      error: err.message,
+      mongoose.connection.once("open", resolve);
+      mongoose.connection.once("error", reject);
     });
   }
-};
 
+  const db = mongoose.connection.db;
+  const bucket = new GridFSBucket(db, {
+    bucketName: "clientDocuments",
+  });
+
+  const filename = `${Date.now()}-${file.originalname}`;
+  const readableStream = Readable.from(file.buffer);
+
+  const uploadStream = bucket.openUploadStream(filename, {
+    contentType: file.mimetype,
+    metadata: {
+      uploadedBy: user?._id || null,
+      originalname: file.originalname,
+    },
+  });
+
+  await new Promise((resolve, reject) => {
+    readableStream
+      .pipe(uploadStream)
+      .on("error", reject)
+      .on("finish", resolve);
+  });
+
+  return {
+    fileId: uploadStream.id,
+    fileName: filename,
+    fileType: file.mimetype,
+    fileUrl: `/api/files/download/${uploadStream.id}`,
+  };
+};
+const profileUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 2MB limit
+});
 module.exports = {
   upload,
   uploadToGridFS,
+  profileUpload
 };

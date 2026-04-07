@@ -204,108 +204,108 @@ exports.uploadLeads = async (req, res) => {
 };
 
 // Assign from unassigned (TeamLead)
-exports.assignFromUnassigned = async (req, res) => {
-  try {
-    if (req.user.role !== "teamlead") return res.status(403).json({ message: "Only TeamLead can assign" });
+// exports.assignFromUnassigned = async (req, res) => {
+//   try {
+//     if (req.user.role !== "teamlead") return res.status(403).json({ message: "Only TeamLead can assign" });
 
-    const { employeeId, count } = req.body;
-    const N = Math.max(1, Number(count) || 1);
+//     const { employeeId, count } = req.body;
+//     const N = Math.max(1, Number(count) || 1);
 
-    const employee = await User.findOne({
-      _id: employeeId,
-      department: "CallingDepartment",
-      role: "employee",
-      teamleadId: req.user._id,
-    });
+//     const employee = await User.findOne({
+//       _id: employeeId,
+//       department: "CallingDepartment",
+//       role: "employee",
+//       teamleadId: req.user._id,
+//     });
 
-    if (!employee) return res.status(400).json({ message: "Employee not in your team or invalid" });
+//     if (!employee) return res.status(400).json({ message: "Employee not in your team or invalid" });
 
-    const leads = await Client.find({ assignedTo: null, status: "pending", teamName: req.user.teamName })
-      .sort({ createdAt: 1 })
-      .limit(N)
-      .lean();
+//     const leads = await Client.find({ assignedTo: null, status: "pending", teamName: req.user.teamName })
+//       .sort({ createdAt: 1 })
+//       .limit(N)
+//       .lean();
 
-    if (!leads.length) return res.json({ message: "No unassigned pending leads" });
+//     if (!leads.length) return res.json({ message: "No unassigned pending leads" });
 
-    const ids = leads.map((l) => l._id);
-    const result = await Client.updateMany(
-      { _id: { $in: ids } },
-      {
-        $set: {
-          assignedTo: employee._id,
-          assignedAt: new Date(),
-          teamleadId: req.user._id,
-          managerId: req.user.managerId || null,
-          updatedBy: req.user._id,
-          updatedAt: new Date(),
-        },
-      }
-    );
+//     const ids = leads.map((l) => l._id);
+//     const result = await Client.updateMany(
+//       { _id: { $in: ids } },
+//       {
+//         $set: {
+//           assignedTo: employee._id,
+//           assignedAt: new Date(),
+//           teamleadId: req.user._id,
+//           managerId: req.user.managerId || null,
+//           updatedBy: req.user._id,
+//           updatedAt: new Date(),
+//         },
+//       }
+//     );
 
-    await ActivityLog.create({
-      userId: req.user._id,
-      action: "assign_from_unassigned",
-      targetCollection: "Client",
-      details: { employeeId: employee._id, requested: N, assigned: result.modifiedCount },
-    });
+//     await ActivityLog.create({
+//       userId: req.user._id,
+//       action: "assign_from_unassigned",
+//       targetCollection: "Client",
+//       details: { employeeId: employee._id, requested: N, assigned: result.modifiedCount },
+//     });
 
-    return res.json({ message: "Assigned", requested: N, assigned: result.modifiedCount });
-  } catch (err) {
-    return respondError(res, 500, "Error assigning leads", err);
-  }
-};
+//     return res.json({ message: "Assigned", requested: N, assigned: result.modifiedCount });
+//   } catch (err) {
+//     return respondError(res, 500, "Error assigning leads", err);
+//   }
+// };
 
-// Rebalance leads among employees of the teamlead
-exports.rebalanceToEmployee = async (req, res) => {
-  try {
-    if (req.user.role !== "teamlead") return res.status(403).json({ message: "Only TeamLead can rebalance" });
+// // Rebalance leads among employees of the teamlead
+// exports.rebalanceToEmployee = async (req, res) => {
+//   try {
+//     if (req.user.role !== "teamlead") return res.status(403).json({ message: "Only TeamLead can rebalance" });
 
-    const employees = await User.find({ department: "CallingDepartment", role: "employee", teamleadId: req.user._id })
-      .select("_id")
-      .lean();
+//     const employees = await User.find({ department: "CallingDepartment", role: "employee", teamleadId: req.user._id })
+//       .select("_id")
+//       .lean();
 
-    if (!employees.length) return res.status(400).json({ message: "No employees in your team" });
+//     if (!employees.length) return res.status(400).json({ message: "No employees in your team" });
 
-    const employeeIds = employees.map((e) => e._id);
+//     const employeeIds = employees.map((e) => e._id);
 
-    const leads = await Client.find({
-      teamleadId: req.user._id,
-      teamName: req.user.teamName,
-      status: { $in: ["pending", "in-progress"] },
-    })
-      .sort({ createdAt: 1 })
-      .lean();
+//     const leads = await Client.find({
+//       teamleadId: req.user._id,
+//       teamName: req.user.teamName,
+//       status: { $in: ["pending", "in-progress"] },
+//     })
+//       .sort({ createdAt: 1 })
+//       .lean();
 
-    if (!leads.length) return res.json({ message: "No leads to rebalance" });
+//     if (!leads.length) return res.json({ message: "No leads to rebalance" });
 
-    const bulkOps = leads.map((lead, i) => ({
-      updateOne: {
-        filter: { _id: lead._id },
-        update: {
-          $set: {
-            assignedTo: employeeIds[i % employeeIds.length],
-            assignedAt: new Date(),
-            updatedBy: req.user._id,
-            updatedAt: new Date(),
-          },
-        },
-      },
-    }));
+//     const bulkOps = leads.map((lead, i) => ({
+//       updateOne: {
+//         filter: { _id: lead._id },
+//         update: {
+//           $set: {
+//             assignedTo: employeeIds[i % employeeIds.length],
+//             assignedAt: new Date(),
+//             updatedBy: req.user._id,
+//             updatedAt: new Date(),
+//           },
+//         },
+//       },
+//     }));
 
-    const bulkResult = await Client.bulkWrite(bulkOps, { ordered: false });
+//     const bulkResult = await Client.bulkWrite(bulkOps, { ordered: false });
 
-    await ActivityLog.create({
-      userId: req.user._id,
-      action: "rebalance_team",
-      targetCollection: "Client",
-      details: { teamName: req.user.teamName, totalLeads: leads.length },
-    });
+//     await ActivityLog.create({
+//       userId: req.user._id,
+//       action: "rebalance_team",
+//       targetCollection: "Client",
+//       details: { teamName: req.user.teamName, totalLeads: leads.length },
+//     });
 
-    return res.json({ message: "Leads rebalanced", rebalanced: leads.length, result: bulkResult.modifiedCount });
-  } catch (err) {
-    return respondError(res, 500, "Error rebalancing leads", err);
-  }
-};
+//     return res.json({ message: "Leads rebalanced", rebalanced: leads.length, result: bulkResult.modifiedCount });
+//   } catch (err) {
+//     return respondError(res, 500, "Error rebalancing leads", err);
+//   }
+// };
 
 // Get my leads (employee)
 exports.getMyLeads = async (req, res) => {
@@ -449,7 +449,6 @@ exports.updateDocumentStatus = async (req, res) => {
     return respondError(res, 500, "Error updating document status", err);
   }
 };
-// controllers/clientController.js
 
 exports.getClients = async (req, res) => {
   try {

@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const {validateUserRole} = require("../utils/vaildateUserRole");
+const { uploadToGridFS } = require("../middleware/uploadMiddleware"); 
 
 function signToken(user) {
   return jwt.sign(
@@ -188,7 +189,7 @@ exports.getMyTeam = async (req, res) => {
 
     // Find all employees in the same teamName
     const teamMembers = await User.find({ teamName: user.teamName, role: "employee" })
-      .select("FirstName LastName email role joiningDate isActive")
+      .select("FirstName LastName email role isActive")
       .sort({ FirstName: 1 });
 
     res.json({
@@ -206,26 +207,76 @@ exports.getMyTeam = async (req, res) => {
     res.status(500).json({ message: "Error fetching team members", error: err.message });
   }
 };
-exports.getMyprofile= async(req,res)=>{
-  try{
-    const user= req.user;
-    const profile= await User.find({email:user.email});
+exports.getMyprofile = async (req, res) => {
+  try {
+    const profile = await User.findById(req.user._id).select("-password");
+
     res.json({
       message: "profile fetched successfully",
-      user: {
-        id: user._id,
-        FirstName: user.FirstName,
-        LastName: user.LastName,
-        email: user.email,
-        department: user.department,
-        role: user.role,
-        teamName: user.teamName,
-      },
-      profile,
+      user: profile,
     });
-  }
-  catch (err) {
+  } catch (err) {
     console.error("getMyProfile error:", err);
-    res.status(500).json({ message: "Error fetching profile", error: err.message });
+    res.status(500).json({ message: "Error fetching profile" });
+  }
+};
+exports.uploadProfilePic = async (req, res) => {
+  try {
+    const userId = req.user.id; // from auth middleware
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    // Upload file to GridFS / storage
+    const fileData = await uploadToGridFS(req.file,req.user);
+
+    // fileData should return: { fileUrl, fileName, fileType }
+
+    const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    {
+      profilePic: {
+        fileName: fileData.fileName,
+        fileType: fileData.fileType,
+        fileUrl: fileData.fileUrl,
+        uploadedAt: new Date(),
+      },
+    },
+    { new: true }
+  ).select("-password");
+
+    res.status(200).json({
+      message: "Profile picture uploaded successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Profile Pic Upload Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const { FirstName, LastName, email } = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        FirstName,
+        LastName,
+        email,
+      },
+      { new: true }
+    ).select("-password");
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

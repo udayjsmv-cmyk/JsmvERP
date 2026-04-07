@@ -16,7 +16,7 @@ const Profile = () => {
     LastName: "",
     email: "",
     role: "",
-    image: "",
+    profilePic: null
   });
 
   const [error, setError] = useState("");
@@ -44,7 +44,12 @@ const Profile = () => {
 
         const data = res.data?.user || res.data;
         setUser(data);
-        if (data.image) setPreview(`${API_BASE}/${data.image}`);
+       if (data.profilePic?.fileUrl) {
+        const baseUrl = API_BASE.replace("/api", ""); // http://localhost:8080
+        const fullUrl = `${baseUrl}${data.profilePic.fileUrl}`;
+
+        setPreview(fullUrl);
+      }
       } catch (err) {
         console.error("Error fetching profile:", err);
         setError(err.response?.data?.message || "Failed to load profile");
@@ -71,43 +76,56 @@ const Profile = () => {
     if (file) {
       const imageUrl = URL.createObjectURL(file);
       setPreview(imageUrl);
-      setUser((prev) => ({ ...prev, image: file }));
+      setUser((prev) => ({ ...prev, profilePic: file }));
     }
   };
 
   // ✅ Save Profile Changes
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Not authenticated. Please log in again.");
-        return;
+const handleSave = async () => {
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Not authenticated. Please log in again.");
+      return;
+    }
+
+    // ✅ Update basic details
+    await axios.put(
+      `${API_BASE}/auth/profile`,
+      {
+        FirstName: user.FirstName,
+        LastName: user.LastName,
+        email: user.email,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
+    );
 
-      const formData = new FormData();
-      formData.append("FirstName", user.FirstName);
-      formData.append("LastName", user.LastName);
-      formData.append("email", user.email);
-      if (user.image instanceof File) formData.append("image", user.image);
+    // ✅ Upload profile pic separately
+    if (user.profilePic instanceof File) {
+      const imgData = new FormData();
+      imgData.append("profilePic", user.profilePic);
 
-      await axios.put(`${API_BASE}/auth/profile`, formData, {
+      await axios.put(`${API_BASE}/auth/profile-pic`, imgData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
-
-      alert("Profile updated successfully!");
-      setEditing(false);
-    } catch (err) {
-      console.error("Error updating profile:", err);
-      alert(err.response?.data?.message || "Failed to update profile");
-    } finally {
-      setLoading(false);
     }
-  };
 
+    alert("Profile updated successfully!");
+    setEditing(false);
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Failed to update profile");
+  } finally {
+    setLoading(false);
+  }
+};
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">

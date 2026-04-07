@@ -5,98 +5,109 @@ import api from "../api/axios";
 const Login = () => {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [status, setStatus] = useState({
+    loading: false,
+    error: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // ✅ prevent page reload
+    e.preventDefault();
 
-    setError("");
-    setLoading(true);
+    setStatus({ loading: true, error: "" });
 
     try {
-      // ✅ ONLY endpoint (NO env here)
-      const res = await api.post("/auth/login", {
-        email: email.trim().toLowerCase(),
-        password,
+      const { data } = await api.post("/auth/login", {
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
       });
 
-      const { token, user } = res.data;
+      const { token, user } = data;
 
-      // ✅ store auth data
+      // 🔐 Better: centralize this later in auth context
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-      // ✅ redirect by role
-      switch (user.role) {
-        case "admin":
-          navigate("/admin");
-          break;
-        case "manager":
-          navigate("/manager");
-          break;
-        case "teamlead":
-          navigate("/teamlead");
-          break;
-        case "employee":
-          navigate("/employee");
-          break;
-        default:
-          navigate("/");
-      }
+      // 🚀 Cleaner role routing
+      const roleRoutes = {
+        admin: "/admin",
+        manager: "/manager",
+        teamlead: "/teamlead",
+        employee: "/employee",
+      };
+
+      navigate(roleRoutes[user.role] || "/");
     } catch (err) {
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Login failed";
-      setError(msg);
-    } finally {
-      setLoading(false);
+      setStatus({
+        loading: false,
+        error:
+          err.response?.data?.message ||
+          err.message ||
+          "Login failed",
+      });
+      return;
     }
+
+    setStatus({ loading: false, error: "" });
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-100 px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-blue-700 mb-6">
-          CRM Login
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-semibold text-center text-blue-700 mb-6">
+          ERP Login
         </h2>
 
-        {error && (
-          <p className="text-red-500 text-center mb-3">{error}</p>
+        {status.error && (
+          <p className="text-red-500 text-center mb-4">
+            {status.error}
+          </p>
         )}
 
-        {/* ✅ IMPORTANT */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <input
             type="email"
+            name="email"
             placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={form.email}
+            onChange={handleChange}
             required
-            className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
+            autoComplete="email"
+            className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
 
           <input
             type="password"
+            name="password"
             placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={form.password}
+            onChange={handleChange}
             required
-            className="w-full border px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-500"
+            autoComplete="current-password"
+            className="w-full border px-4 py-2 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
 
-          {/* ✅ MUST be submit */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            disabled={status.loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {loading ? "Logging in..." : "Login"}
+            {status.loading ? "Logging in..." : "Login"}
           </button>
         </form>
+        <p className="text-center font-semibold text-grey-800 py-2">@2026 ERP by UK </p>
       </div>
     </div>
   );

@@ -1,11 +1,5 @@
 // tailwind.config.js
 module.exports = {
-  content: [
-    './src/**/*.{html,js,jsx,ts,tsx}',  // Adjust based on your project structure and file types
-    './public/index.html',
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
+  darkMode: "class", // IMPORTANT
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+};

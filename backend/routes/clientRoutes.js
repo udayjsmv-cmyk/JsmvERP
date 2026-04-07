@@ -36,8 +36,8 @@ router.post(
 );
 
 // Assign & rebalance
-router.post("/assign-from-unassigned", requireAuth, allowRoles("teamlead"), assignFromUnassigned);
-router.post("/rebalance", requireAuth, allowRoles("teamlead"), rebalanceToEmployee);
+// router.post("/assign-from-unassigned", requireAuth, allowRoles("teamlead"), assignFromUnassigned);
+// router.post("/rebalance", requireAuth, allowRoles("teamlead"), rebalanceToEmployee);
 
 // ================= EMPLOYEES =================
 router.get("/employees", requireAuth, allowRoles("admin", "manager", "teamlead"), getAllEmployees);
