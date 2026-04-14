@@ -40,6 +40,13 @@ const Sidebar = () => {
       clients: false,
       departments: ["reviewer"],
     },
+     // ✅ NEW ROLE: TL (Team Lead)
+    teamlead: {
+      dashboard: true,
+      employees: false,
+      clients: false,
+      departments: ["calling"],
+    },
   };
 
   const permissions = roleConfig[role] || {};
