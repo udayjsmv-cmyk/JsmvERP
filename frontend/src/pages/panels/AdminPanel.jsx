@@ -108,11 +108,11 @@ const openPreview = (fileId, fileName) => {
   const ext = (fileName || "").split(".").pop().toLowerCase();
 
   let type = "other";
-  if (ext==="pdf") type = "pdf";
+  if (ext === "pdf") type = "pdf";
   else if (["jpg", "jpeg", "png"].includes(ext)) type = "image";
-  else type = "office";
+  else type = "other";
 
-  setPreviewUrl({ url, type:"pdf", });
+  setPreviewUrl({ url, type }); 
   setShowPreview(true);
 };
   const handleChange = (e) => {
