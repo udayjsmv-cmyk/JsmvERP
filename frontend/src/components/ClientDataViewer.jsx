@@ -207,7 +207,7 @@ const ClientDataViewer = ({ title, role, currentUser, division, fetchLeads }) =>
               Export CSV
             </CSVLink>
 
-            /* {/* Upload visible only for manager */}
+            {/* Upload visible only for manager */}
             {role === "manager" && division && (
               <label
                 className={`cursor-pointer bg-[#006989] text-white px-4 py-2 rounded ${uploading ? "opacity-60" : ""}`}
@@ -215,7 +215,7 @@ const ClientDataViewer = ({ title, role, currentUser, division, fetchLeads }) =>
                 Upload CSV
                 <input type="file" accept=".csv,.xlsx" onChange={handleFileUpload} className="hidden" />
               </label>
-            )} */
+            )}
           </div>
         </div>
 
