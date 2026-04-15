@@ -6,7 +6,7 @@ const API_BASE =
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 60000,
   withCredentials: true,
 });
 
